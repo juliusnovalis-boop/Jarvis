@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.next/
+out/
+
+# Environnement & secrets
+.env
+.env.*
+!.env.example
+
+# Base de données locale
+*.db
+*.sqlite
+
+# Artefacts de construction Windows (téléchargeables depuis Releases)
+dist/
+*.exe
+*.msi
+
+# Maquettes de l'agent (reconstitués par packaging)
+public/jarvis-node/Jarvis-Complete-*
+public/jarvis-node/JarvisAgent-*
+
+# Logs & caches
+*.log
+artifacts/
+tools/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+Thumbs.db
+tsconfig.tsbuildinfo
