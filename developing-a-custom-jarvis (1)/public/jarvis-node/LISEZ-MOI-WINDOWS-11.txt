@@ -1,0 +1,60 @@
+════════════════════════════════════════════════════════════════
+ J.A.R.V.I.S. COMPLETE — WINDOWS 11 64 BITS
+════════════════════════════════════════════════════════════════
+
+⚠ OÙ SONT LES INSTALLATEURS ?
+  Les fichiers Jarvis-Complete-Setup.exe (~204 Mo) ne sont PAS dans
+  l'archive du code source. Deux façons de les obtenir :
+
+  1. DEPUIS L'APPLICATION EN COURS D'EXECUTION (serveur en ligne) :
+        page /install   ou   /api/download?f=Jarvis-Complete-Setup.exe
+  2. EN LES CONSTRUISANT VOUS-MÊME depuis le code source :
+        powershell -ExecutionPolicy Bypass -File packaging\windows\Construire-Jarvis-Complet.ps1
+     (reconstruit tout sur VOTRE machine ; ajoutez -WithExe avec NSIS)
+
+CE PAQUET CONTIENT TOUT :
+  ✓ interface Iron Man complète
+  ✓ serveur Next.js local
+  ✓ Node.js Windows x64 embarqué
+  ✓ PostgreSQL 16 portable + base initialisée automatiquement
+  ✓ agent PC (souris, clavier, fichiers, terminal)
+  ✓ détection vocale locale « Jarvis » (openWakeWord)
+  ✓ métarecherche Internet DDGS
+  ✓ modèles vocaux ONNX hors ligne
+
+INSTALLATION
+  1. Double-cliquez Jarvis-Complete-Setup.exe
+  2. Acceptez la demande UAC Windows
+  3. SmartScreen éventuel : « Informations complémentaires » puis
+     « Exécuter quand même » (le fichier n'a pas de certificat commercial)
+  4. Attendez l'initialisation (la première fois peut durer 1 à 2 minutes)
+
+UTILISATION
+  - Un raccourci « Jarvis » est créé sur le bureau.
+  - Jarvis démarre automatiquement avec votre session Windows.
+  - Dites simplement « Jarvis » : le navigateur s'ouvre sur
+    http://127.0.0.1:3210 et le PC répond vocalement.
+  - Toutes les données restent dans :
+      %LOCALAPPDATA%\JarvisCompleteData
+
+AUCUN LOGICIEL EXTERNE REQUIS
+  Ni Python, ni Node.js, ni PostgreSQL, ni Docker.
+  Seul un accès Internet est nécessaire pour les réponses web en direct.
+
+DIAGNOSTIC
+  Menu Démarrer > Jarvis > Diagnostic
+  Journaux : %LOCALAPPDATA%\JarvisCompleteData\logs
+
+ARRÊT / DÉSINSTALLATION
+  Menu Démarrer > Jarvis > Arrêter Jarvis
+  Paramètres Windows > Applications > J.A.R.V.I.S. Complete > Désinstaller
+
+PORTS LOCAUX
+  3210  interface web (127.0.0.1 uniquement)
+  55432 PostgreSQL (127.0.0.1 uniquement)
+
+SÉCURITÉ
+  - Aucun port n'est exposé sur le réseau local : écoute localhost uniquement.
+  - Le mot-clé vocal est détecté hors ligne ; l'audio ne quitte pas le PC.
+  - La souris dans le coin supérieur gauche active le failsafe PyAutoGUI.
+════════════════════════════════════════════════════════════════

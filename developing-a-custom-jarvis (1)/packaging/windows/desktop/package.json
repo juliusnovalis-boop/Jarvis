@@ -1,0 +1,7 @@
+{
+  "name": "jarvis-desktop",
+  "version": "1.0.0",
+  "description": "Interface bureau native de J.A.R.V.I.S.",
+  "main": "main.js",
+  "private": true
+}
