@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Hexagon, Languages, Smartphone, Volume2, VolumeX } from "lucide-react";
+import { Code2, Download, Hexagon, Languages, Mail, Smartphone, Volume2, VolumeX } from "lucide-react";
 import { ApisPanel } from "@/components/jarvis/ApisPanel";
 import { Boot } from "@/components/jarvis/Boot";
 import { CyberBackdrop, DecryptedText, TelemetryRibbon } from "@/components/jarvis/FuturisticHud";
@@ -629,6 +629,20 @@ export default function JarvisPage() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <a
+            href="/code"
+            className="cyber-btn hidden items-center gap-1.5 border border-cyan-500/30 bg-cyan-400/[0.06] px-3 py-1.5 font-orbitron text-[9px] uppercase tracking-[0.2em] text-cyan-200/90 transition-colors hover:border-cyan-300/70 hover:text-cyan-50 md:flex"
+            title="DEV STUDIO — MCP, skills, agents IA, montage vidéo, jeux"
+          >
+            <Code2 size={11} /> Studio
+          </a>
+          <a
+            href="/admin"
+            className="cyber-btn hidden items-center gap-1.5 border border-cyan-500/30 bg-cyan-400/[0.06] px-3 py-1.5 font-orbitron text-[9px] uppercase tracking-[0.2em] text-cyan-200/90 transition-colors hover:border-cyan-300/70 hover:text-cyan-50 md:flex"
+            title="Gestion administrative — emails IMAP/SMTP, échéances"
+          >
+            <Mail size={11} /> Admin
+          </a>
           <a
             href="/install"
             className="cyber-btn hidden items-center gap-1.5 border border-emerald-400/40 bg-emerald-400/[0.08] px-3 py-1.5 font-orbitron text-[9px] uppercase tracking-[0.2em] text-emerald-300/90 transition-colors hover:border-emerald-300 hover:text-emerald-100 sm:flex"

@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   // Windows complet (Jarvis-Complete-Portable.zip / Setup.exe) — aucun npm
   // install sur le PC utilisateur, le serveur part de server.js.
   output: "standalone",
+  // Clients IMAP/SMTP : laissés hors bundle (API Node natives, gros paquets).
+  serverExternalPackages: ["imapflow", "nodemailer"],
 };
 
 export default nextConfig;
