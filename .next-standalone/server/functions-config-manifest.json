@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/mail": {
+      "maxDuration": 60
+    },
+    "/api/search": {
+      "maxDuration": 120
+    },
+    "/api/vision": {
+      "maxDuration": 120
+    }
+  }
+}

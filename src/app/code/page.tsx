@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Code2, Gamepad2, Plug, Wrench } from "lucide-react";
 import { McpHub } from "@/components/studio/McpHub";
 import { VideoStudio } from "@/components/studio/VideoStudio";
-import { GameStudio } from "@/components/studio/GameStudio";
+
 import { SkillsAgents } from "@/components/studio/SkillsAgents";
 
 export const metadata = {
@@ -48,7 +48,7 @@ export default function CodePage() {
             {[
               { icon: Plug, label: "MCP", value: "10 endpoints" },
               { icon: Wrench, label: "Skills", value: "12 modules" },
-              { icon: Gamepad2, label: "Moteur", value: "2D · 60 IPS" },
+              { icon: Gamepad2, label: "Moteur", value: "3D · PBR" },
             ].map((s) => (
               <div
                 key={s.label}
@@ -68,7 +68,13 @@ export default function CodePage() {
           <div className="min-w-0 space-y-4">
             <McpHub />
             <VideoStudio />
-            <GameStudio />
+            <Link href="/studio" className="hud-frame flex items-center gap-5 border border-lime-300/30 bg-[#18251b] p-7 transition-colors hover:bg-[#233323]">
+              <Gamepad2 size={36} className="shrink-0 text-lime-200" />
+              <div>
+                <h2 className="font-orbitron text-lg text-lime-100">JARVIS STUDIO 3D ↗</h2>
+                <p className="mt-2 font-tech text-xs leading-relaxed text-lime-100/70">Un véritable éditeur 3D plein écran : mondes procéduraux, matériaux PBR, portail animé, exploration jouable, sauvegarde et export GLB.</p>
+              </div>
+            </Link>
           </div>
           <div className="min-w-0">
             <SkillsAgents />

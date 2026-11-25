@@ -1,66 +1,105 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createReadStream, existsSync, statSync } from "fs";
-import { join } from "path";
+import { join, sep } from "path";
 import { Readable } from "stream";
 
 export const dynamic = "force-dynamic";
 
 /**
  * 📦 TÉLÉCHARGEMENT ROBUSTE
- *  Route dédiée avec en-têtes complets (reprise, type MIME exécutable,
- *  nom de fichier forcé) — évite les blocages navigateurs silencieux.
  *
- *  /api/download?f=Jarvis-Complete-Setup.exe   installateur Windows
- *  /api/download?f=Jarvis-Complete-Portable.zip version portable
- *  /api/download?f=Jarvis.apk                  application Android
- *  /api/download?f=.env                        fichier de clés (à ajouter)
+ *  /api/download?f=Jarvis-Agent-Setup.exe    installateur Windows (NSIS)
+ *  /api/download?f=Jarvis-Agent-Portable.zip version portable de l'agent
+ *  /api/download?f=Jarvis.apk                application Android
+ *  /api/download?f=.env                      modèle de clés API
+ *  /api/download?f=LISEZ-MOI-WINDOWS-11.txt  notice d'installation
+ *
+ *  Règle de sécurité : un nom de fichier ne peut jamais sortir de
+ *  public/jarvis-node (ni `..`, ni séparateur, ni chemin absolu).
+ *  Les deux seuls fichiers hors de ce dossier sont déclarés en dur ci-dessous.
  */
 
-type Entry = { mime: string; from: string };
+const PUBLIC_DIR = join(process.cwd(), "public", "jarvis-node");
 
-const FILES: Record<string, Entry> = {
-  "Jarvis-Complete-Setup.exe": {
-    mime: "application/vnd.microsoft.portable-executable",
-    from: "public/jarvis-node/Jarvis-Complete-Setup.exe",
-  },
-  "Jarvis-Complete-Portable.zip": { mime: "application/zip", from: "public/jarvis-node/Jarvis-Complete-Portable.zip" },
-  // 📱 Application Android construite par android/build-apk.sh
-  "Jarvis.apk": { mime: "application/vnd.android.package-archive", from: "public/jarvis-node/Jarvis.apk" },
-  // 🔑 Fichier de clés livré avec l'installateur (.env.modele → app\.env)
+/** Fichiers de dépôt explicitement exposés (modèle de clés, exemple). */
+const ROOT_FILES: Record<string, { mime: string; from: string }> = {
   ".env": { mime: "text/plain; charset=utf-8", from: "packaging/windows/.env.modele" },
   ".env.example": { mime: "text/plain; charset=utf-8", from: ".env.example" },
-  "LISEZ-MOI-WINDOWS-11.txt": { mime: "text/plain; charset=utf-8", from: "public/jarvis-node/LISEZ-MOI-WINDOWS-11.txt" },
-  "LICENCE.txt": { mime: "text/plain; charset=utf-8", from: "public/jarvis-node/LICENCE.txt" },
-  "jarvis-source.bundle": { mime: "application/octet-stream", from: "public/jarvis-node/jarvis-source.bundle" },
-  // Agent seul conservé pour Linux/macOS et les installations expertes.
-  "jarvis-agent.py": { mime: "text/x-python; charset=utf-8", from: "public/jarvis-node/jarvis-agent.py" },
-  "LISEZ-MOI.txt": { mime: "text/plain; charset=utf-8", from: "public/jarvis-node/LISEZ-MOI.txt" },
 };
 
-function resolve(name: string): { entry: Entry; path: string } | null {
-  const entry = FILES[name];
-  if (!entry) return null;
-  const path = join(process.cwd(), entry.from);
-  if (!existsSync(path)) return null;
-  return { entry, path };
+const MIME: Record<string, string> = {
+  ".exe": "application/vnd.microsoft.portable-executable",
+  ".zip": "application/zip",
+  ".apk": "application/vnd.android.package-archive",
+  ".txt": "text/plain; charset=utf-8",
+  ".md": "text/plain; charset=utf-8",
+  ".py": "text/x-python; charset=utf-8",
+  ".ps1": "text/plain; charset=utf-8",
+  ".bat": "text/plain; charset=utf-8",
+  ".vbs": "text/plain; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".bundle": "application/octet-stream",
+};
+
+function safeBasename(name: string): boolean {
+  if (!name || name.length > 120) return false;
+  if (name.includes("/") || name.includes("\\") || name.includes("\0")) return false;
+  if (name === "." || name === ".." || name.includes("..")) return false;
+  if (!/^[\w][\w.\- ()]*$/.test(name)) return false;
+  return true;
+}
+
+type Resolved = { mime: string; path: string; name: string };
+
+function resolve(name: string): Resolved | null {
+  if (!name) return null;
+
+  const root = ROOT_FILES[name];
+  if (root) {
+    const path = join(process.cwd(), root.from);
+    if (!existsSync(path)) return null;
+    return { mime: root.mime, path, name };
+  }
+
+  if (!safeBasename(name)) return null;
+  const path = join(PUBLIC_DIR, name);
+  // Vérification définitive : le fichier résolu doit rester dans public/jarvis-node.
+  if (!path.startsWith(PUBLIC_DIR + sep)) return null;
+  if (!existsSync(path) || !statSync(path).isFile()) return null;
+  const ext = name.slice(name.lastIndexOf(".")).toLowerCase();
+  return { mime: MIME[ext] ?? "application/octet-stream", path, name };
+}
+
+function notFound(name: string) {
+  return NextResponse.json(
+    {
+      error: `Fichier absent du serveur : ${name || "(aucun nom)"}.`,
+      hint: "Les artefacts se construisent avec packaging/windows/JarvisAgent.nsi (makensis) et android/build-apk.sh. Voir /install.",
+      directory: "public/jarvis-node",
+    },
+    { status: 404 }
+  );
+}
+
+function headersFor(found: Resolved, total: number) {
+  return {
+    "content-type": found.mime,
+    "accept-ranges": "bytes",
+    "content-disposition": `attachment; filename="${found.name.replace(/"/g, "")}"`,
+    "x-content-type-options": "nosniff",
+    "cache-control": "no-store",
+    "content-length": String(total),
+  };
 }
 
 export async function GET(req: NextRequest) {
-  const name = req.nextUrl.searchParams.get("f") ?? "Jarvis-Complete-Setup.exe";
+  const name = req.nextUrl.searchParams.get("f") ?? "";
   const found = resolve(name);
-  if (!FILES[name]) return NextResponse.json({ error: "Fichier inconnu." }, { status: 404 });
-  if (!found) return NextResponse.json({ error: "Fichier absent du serveur." }, { status: 404 });
+  if (!found) return notFound(name);
 
-  const { entry, path } = found;
-  const total = statSync(path).size;
+  const total = statSync(found.path).size;
+  const base = headersFor(found, total);
   const range = req.headers.get("range");
-  const baseHeaders = {
-    "content-type": entry.mime,
-    "accept-ranges": "bytes",
-    "content-disposition": `attachment; filename="${name}"`,
-    "x-content-type-options": "nosniff",
-    "cache-control": "no-store",
-  };
 
   // Reprise de téléchargement (Accept-Ranges)
   if (range) {
@@ -71,35 +110,21 @@ export async function GET(req: NextRequest) {
       if (start >= total || end < start) {
         return new NextResponse(null, { status: 416, headers: { "content-range": `bytes */${total}` } });
       }
-      const stream = Readable.toWeb(createReadStream(path, { start, end })) as ReadableStream;
+      const stream = Readable.toWeb(createReadStream(found.path, { start, end })) as ReadableStream;
       return new NextResponse(stream, {
         status: 206,
-        headers: {
-          ...baseHeaders,
-          "content-length": String(end - start + 1),
-          "content-range": `bytes ${start}-${end}/${total}`,
-        },
+        headers: { ...base, "content-length": String(end - start + 1), "content-range": `bytes ${start}-${end}/${total}` },
       });
     }
   }
 
-  const stream = Readable.toWeb(createReadStream(path)) as ReadableStream;
-  return new NextResponse(stream, {
-    status: 200,
-    headers: { ...baseHeaders, "content-length": String(total) },
-  });
+  const stream = Readable.toWeb(createReadStream(found.path)) as ReadableStream;
+  return new NextResponse(stream, { status: 200, headers: base });
 }
 
 export async function HEAD(req: NextRequest) {
-  const name = req.nextUrl.searchParams.get("f") ?? "Jarvis-Complete-Setup.exe";
+  const name = req.nextUrl.searchParams.get("f") ?? "";
   const found = resolve(name);
   if (!found) return new NextResponse(null, { status: 404 });
-  return new NextResponse(null, {
-    headers: {
-      "content-type": found.entry.mime,
-      "content-length": String(statSync(found.path).size),
-      "content-disposition": `attachment; filename="${name}"`,
-      "x-content-type-options": "nosniff",
-    },
-  });
+  return new NextResponse(null, { headers: headersFor(found, statSync(found.path).size) });
 }

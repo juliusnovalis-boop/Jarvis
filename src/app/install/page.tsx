@@ -1,19 +1,83 @@
+import { createHash } from "node:crypto";
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { join, sep } from "node:path";
 import {
-  CheckCircle2, Download, HardDrive, KeyRound, Mic2, ShieldAlert, Smartphone, TerminalSquare,
+  AppWindow, CheckCircle2, Download, FileText, HardDrive, KeyRound, Mic2, Package, ShieldAlert,
+  Smartphone, TerminalSquare,
 } from "lucide-react";
 
+export const metadata = {
+  title: "Télécharger J.A.R.V.I.S. — installateur complet Windows, portable et Android",
+  description:
+    "Installez J.A.R.V.I.S. en une fois : assistant IA, JARVIS Studio 3D, montage vidéo, MCP, skills et agents — avec Node.js et PostgreSQL embarqués.",
+};
+
+const PUBLIC_DIR = join(process.cwd(), "public", "jarvis-node");
+
+const ROOT_FILES: Record<string, string> = {
+  ".env": "packaging/windows/.env.modele",
+  ".env.example": ".env.example",
+};
+
+type Meta = { file: string; available: boolean; size: number; sha: string };
+
+/** Métadonnées réelles : taille et SHA-256 lus sur le fichier livré. */
+async function meta(file: string): Promise<Meta> {
+  const root = ROOT_FILES[file];
+  const path = root ? join(process.cwd(), root) : join(PUBLIC_DIR, file);
+  const safe = root ? true : path.startsWith(PUBLIC_DIR + sep);
+  if (!safe || !existsSync(path) || !statSync(path).isFile()) return { file, available: false, size: 0, sha: "" };
+  const size = statSync(path).size;
+  const hash = createHash("sha256");
+  await new Promise<void>((resolve, reject) => {
+    const stream = createReadStream(path);
+    stream.on("data", chunk => hash.update(chunk));
+    stream.on("end", () => resolve());
+    stream.on("error", reject);
+  });
+  return { file, available: true, size, sha: hash.digest("hex") };
+}
+
+const formatSize = (n: number) =>
+  n >= 1024 * 1024
+    ? `${(n / 1048576).toFixed(1).replace(".", ",")} Mo`
+    : `${Math.max(1, Math.round(n / 1024))} Ko`;
+
+const download = (file: string) => `/api/download?f=${encodeURIComponent(file)}`;
+
 const INCLUDED = [
-  "Interface Iron Man complète et serveur Next.js local",
-  "Node.js 22 Windows x64 embarqué",
-  "PostgreSQL 16 portable et base créée automatiquement",
-  "Agent PC : souris, clavier, fichiers et console — aucune fenêtre au bureau",
-  "Fichier .env vierge pour vos clés API (Doubao, Groq, Gemini…)",
-  "Application Android .apk de l'interface mobile",
-  "Mot-clé vocal « Jarvis » hors ligne avec openWakeWord",
-  "Métarecherche Internet DDGS et modèles ONNX",
+  "Assistant IA — accueil, voix, mémoire, contrôle du PC",
+  "JARVIS Studio 3D — éditeur de mondes, jeu, matériaux PBR",
+  "DEV STUDIO — MCP, skills, agents IA, montage vidéo multi-pistes",
+  "Modules Admin (IMAP/SMTP), mobile et installateur",
+  "Fenêtre bureau Electron — protocole jarvis://, sans barre d'adresse",
+  "Moteur Next.js autonome + Node.js 22 embarqué",
+  "PostgreSQL 16 portable, base créée au premier lancement",
+  "Python 3.11 embarqué : pyautogui, openWakeWord, pywin32, SAPI",
+  "Modèles vocaux ONNX « Hey Jarvis » + agent PC (souris, clavier, fichiers)",
+  "Modèle de clés API (.env) jamais écrasé par une mise à jour",
 ];
 
-export default function InstallPage() {
+export default async function InstallPage() {
+  const [setup, portable, agentSetup, agentZip, apk, envFile, notice, licence, envExample, agent] =
+    await Promise.all([
+      meta("Jarvis-Complete-Setup.exe"),
+      meta("Jarvis-Complete-Portable.zip"),
+      meta("Jarvis-Agent-Setup.exe"),
+      meta("Jarvis-Agent-Portable.zip"),
+      meta("Jarvis.apk"),
+      meta(".env"),
+      meta("LISEZ-MOI-WINDOWS-11.txt"),
+      meta("LICENCE.txt"),
+      meta(".env.example"),
+      meta("jarvis-agent.py"),
+    ]);
+
+  const light = [
+    { m: agentSetup, label: "Agent seul · .exe", hint: "PC agent + lanceurs" },
+    { m: agentZip, label: "Agent seul · .zip", hint: "sans installation" },
+  ].filter(x => x.m.available);
+
   return (
     <main className="jarvis-scene relative min-h-screen overflow-hidden px-4 py-10 text-cyan-50">
       <div className="jarvis-grid pointer-events-none absolute inset-0" />
@@ -32,64 +96,112 @@ export default function InstallPage() {
             J.A.R.V.I.S. COMPLETE
           </h1>
           <p className="mx-auto mt-4 max-w-2xl font-tech text-sm leading-relaxed text-cyan-200/75">
-            Une véritable application bureau J.A.R.V.I.S. sur le protocole natif jarvis://app — aucune URL
-            localhost, aucune barre d'adresse, aucun onglet navigateur. Toutes les dépendances sont embarquées.
+            Un seul installateur pour <strong className="text-cyan-100">toutes les interfaces</strong> : assistant IA,
+            JARVIS Studio 3D, montage vidéo, MCP, skills et agents. Node.js et PostgreSQL sont embarqués — aucun
+            runtime à installer à part.
           </p>
         </div>
 
+        {/* ── Installateur complet ─────────────────────────────── */}
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <a
-            href="/api/download?f=Jarvis-Complete-Setup.exe"
-            className="hud-frame group border border-emerald-400/45 bg-emerald-400/[0.08] p-6 transition-all hover:border-emerald-300 hover:bg-emerald-400/[0.14] hover:shadow-[0_0_35px_rgba(52,211,153,0.2)]"
+            href={setup.available ? download(setup.file) : undefined}
+            aria-disabled={!setup.available}
+            className={`hud-frame group border p-6 transition-all ${
+              setup.available
+                ? "border-emerald-400/45 bg-emerald-400/[0.08] hover:border-emerald-300 hover:bg-emerald-400/[0.14] hover:shadow-[0_0_35px_rgba(52,211,153,0.2)]"
+                : "border-amber-400/35 bg-amber-400/[0.05] opacity-90"
+            }`}
           >
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center border border-emerald-400/40 bg-emerald-400/10">
-                <Download size={20} className="text-emerald-300" />
+              <span
+                className={`grid h-11 w-11 place-items-center border ${
+                  setup.available ? "border-emerald-400/40 bg-emerald-400/10" : "border-amber-400/40 bg-amber-400/10"
+                }`}
+              >
+                <Download size={20} className={setup.available ? "text-emerald-300" : "text-amber-300"} />
               </span>
               <div>
-                <p className="font-orbitron text-sm uppercase tracking-[0.15em] text-emerald-100">Installateur .exe</p>
+                <p className="font-orbitron text-sm uppercase tracking-[0.15em] text-emerald-100">
+                  Installateur .exe
+                </p>
                 <p className="font-tech text-[10px] text-emerald-300/60">
-                  Application bureau native · 383,6 Mo · jarvis://app
+                  {setup.available
+                    ? `Tout inclus · ${formatSize(setup.size)} · Windows x64`
+                    : "Non construit sur ce serveur"}
                 </p>
               </div>
             </div>
             <p className="mt-4 font-tech text-[11px] leading-relaxed text-cyan-100/70">
-              Une installation automatique avec raccourcis, démarrage Windows et désinstallateur.
+              {setup.available
+                ? "Toutes les interfaces + Electron, Node.js 22, PostgreSQL 16, Python 3.11 et l'agent PC, installés dans C:\\Program Files\\Jarvis."
+                : "Compilez-le avec scripts/build-complete-installer.sh, puis rechargez cette page."}
             </p>
-            <code className="mt-3 block break-all font-tech text-[8.5px] text-emerald-400/55">
-              SHA-256 23e3eac9a200eaa74442f422f50099075171f6a5726c55fd4b235c6c60865170
-            </code>
+            {setup.available ? (
+              <code className="mt-3 block break-all font-tech text-[8.5px] text-emerald-400/55">
+                SHA-256 {setup.sha}
+              </code>
+            ) : (
+              <code className="mt-3 block break-all font-tech text-[8.5px] text-amber-300/70">
+                ./scripts/build-complete-installer.sh
+              </code>
+            )}
           </a>
 
           <a
-            href="/api/download?f=Jarvis-Complete-Portable.zip"
-            className="hud-frame group border border-cyan-400/35 bg-cyan-400/[0.06] p-6 transition-all hover:border-cyan-300 hover:bg-cyan-400/[0.12] hover:shadow-[0_0_35px_rgba(34,211,238,0.2)]"
+            href={portable.available ? download(portable.file) : undefined}
+            aria-disabled={!portable.available}
+            className={`hud-frame group border p-6 transition-all ${
+              portable.available
+                ? "border-cyan-400/35 bg-cyan-400/[0.06] hover:border-cyan-300 hover:bg-cyan-400/[0.12] hover:shadow-[0_0_35px_rgba(34,211,238,0.2)]"
+                : "border-amber-400/35 bg-amber-400/[0.05] opacity-90"
+            }`}
           >
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center border border-cyan-400/40 bg-cyan-400/10">
-                <HardDrive size={20} className="text-cyan-300" />
+              <span
+                className={`grid h-11 w-11 place-items-center border ${
+                  portable.available ? "border-cyan-400/40 bg-cyan-400/10" : "border-amber-400/40 bg-amber-400/10"
+                }`}
+              >
+                <HardDrive size={20} className={portable.available ? "text-cyan-300" : "text-amber-300"} />
               </span>
               <div>
-                <p className="font-orbitron text-sm uppercase tracking-[0.15em] text-cyan-100">Version portable</p>
+                <p className="font-orbitron text-sm uppercase tracking-[0.15em] text-cyan-100">
+                  Version portable
+                </p>
                 <p className="font-tech text-[10px] text-cyan-300/60">
-                  ZIP complet · 364,9 Mo · Node + PostgreSQL + agent
+                  {portable.available
+                    ? `ZIP complet · ${formatSize(portable.size)} · sans installation`
+                    : "Non construit sur ce serveur"}
                 </p>
               </div>
             </div>
             <p className="mt-4 font-tech text-[11px] leading-relaxed text-cyan-100/70">
-              Décompressez puis lancez PREMIERE-INSTALLATION.bat. Idéal si SmartScreen bloque le setup.
+              {portable.available
+                ? "Décompressez puis lancez PREMIERE-INSTALLATION.bat. Idéal si SmartScreen bloque le setup."
+                : "Même contenu que l'installateur, à produire avec la commande ci-dessous."}
             </p>
-            <code className="mt-3 block break-all font-tech text-[8.5px] text-cyan-400/55">
-              SHA-256 e0aa8ca8a43ea8c006f60fe40ec520ef88c2aeb144505fad2dd4a87b2b88c372
-            </code>
+            {portable.available ? (
+              <code className="mt-3 block break-all font-tech text-[8.5px] text-cyan-400/55">
+                SHA-256 {portable.sha}
+              </code>
+            ) : (
+              <code className="mt-3 block break-all font-tech text-[8.5px] text-amber-300/70">
+                ./scripts/build-complete-installer.sh
+              </code>
+            )}
           </a>
         </div>
 
-        {/* Android + fichier de clés */}
+        {/* ── Android + clés ─────────────────────────────────────── */}
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <a
-            href="/api/download?f=Jarvis.apk"
-            className="hud-frame group border border-violet-400/40 bg-violet-400/[0.07] p-5 transition-all hover:border-violet-300 hover:bg-violet-400/[0.13] hover:shadow-[0_0_30px_rgba(167,139,250,0.18)]"
+          <div
+            aria-disabled={!apk.available}
+            className={`hud-frame border p-5 ${
+              apk.available
+                ? "border-violet-400/40 bg-violet-400/[0.07]"
+                : "border-amber-400/30 bg-amber-400/[0.04]"
+            }`}
           >
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center border border-violet-400/40 bg-violet-400/10">
@@ -100,22 +212,31 @@ export default function InstallPage() {
                   Application Android
                 </p>
                 <p className="font-tech text-[10px] text-violet-300/60">
-                  Fichier .apk signé · 13 Ko · Android 7+
+                  {apk.available ? `Fichier .apk · ${formatSize(apk.size)} · Android 7+` : "APK non compilé sur ce serveur"}
                 </p>
               </div>
             </div>
             <p className="mt-3 font-tech text-[11px] leading-relaxed text-cyan-100/70">
-              Coque WebView de l&apos;interface mobile. Au premier lancement, saisissez l&apos;adresse de
-              votre PC — <code className="text-violet-200">http://192.168.1.10:3210/mobile</code> —
-              elle est mémorisée ensuite.
+              Coque WebView de l&apos;interface mobile : saisissez l&apos;adresse de votre PC —{" "}
+              <code className="text-violet-200">http://192.168.1.10:3210/mobile</code> — elle est mémorisée ensuite.
             </p>
-            <span className="mt-3 inline-flex items-center gap-1.5 font-tech text-[9.5px] uppercase tracking-[0.16em] text-violet-300/85">
-              <Download size={10} /> Télécharger Jarvis.apk
-            </span>
-          </a>
+            {apk.available ? (
+              <a
+                href={download(apk.file)}
+                className="mt-3 inline-flex items-center gap-1.5 font-tech text-[9.5px] uppercase tracking-[0.16em] text-violet-300/85 hover:text-violet-100"
+              >
+                <Download size={10} /> Télécharger Jarvis.apk
+              </a>
+            ) : (
+              <code className="mt-3 block break-all font-tech text-[9px] text-amber-300/75">
+                ./android/build-apk.sh
+              </code>
+            )}
+          </div>
 
           <a
-            href="/api/download?f=.env"
+            href={envFile.available ? download(envFile.file) : undefined}
+            aria-disabled={!envFile.available}
             className="hud-frame group border border-amber-400/40 bg-amber-400/[0.06] p-5 transition-all hover:border-amber-300 hover:bg-amber-400/[0.12] hover:shadow-[0_0_30px_rgba(251,191,36,0.15)]"
           >
             <div className="flex items-center gap-3">
@@ -127,15 +248,14 @@ export default function InstallPage() {
                   Fichier .env
                 </p>
                 <p className="font-tech text-[10px] text-amber-300/60">
-                  Vos clés API · livré avec l&apos;installateur
+                  Vos clés API · {envFile.available ? formatSize(envFile.size) : "indisponible"}
                 </p>
               </div>
             </div>
             <p className="mt-3 font-tech text-[11px] leading-relaxed text-cyan-100/70">
-              Présent dès l&apos;installation dans{" "}
-              <code className="text-amber-200">{"C:\\Program Files\\Jarvis\\app\\.env"}</code>.
-              Ajoutez vos clés (Doubao, Groq, Gemini, Ollama…) puis redémarrez Jarvis — jamais écrasé
-              par une mise à jour.
+              Ajoutez vos clés (Doubao, Groq, Gemini, Ollama…) dans{" "}
+              <code className="text-amber-200">{"C:\\Program Files\\JARVIS\\app\\.env"}</code>, puis redémarrez
+              Jarvis — jamais écrasé par une mise à jour.
             </p>
             <span className="mt-3 inline-flex items-center gap-1.5 font-tech text-[9.5px] uppercase tracking-[0.16em] text-amber-300/85">
               <Download size={10} /> Télécharger .env
@@ -143,15 +263,96 @@ export default function InstallPage() {
           </a>
         </div>
 
+        {/* ── Contenu de l'installateur ─────────────────────────── */}
+        <div className="hud-frame mt-6 border border-cyan-500/20 bg-[#04101f]/75 p-5">
+          <h2 className="flex items-center gap-2 font-orbitron text-xs uppercase tracking-[0.2em] text-cyan-200">
+            <Package size={15} /> Ce que contient l&apos;installateur
+          </h2>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {INCLUDED.map(item => (
+              <li key={item} className="flex items-start gap-2 font-tech text-[11px] leading-relaxed text-cyan-100/75">
+                <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-emerald-400" /> {item}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-cyan-500/15 pt-3 font-tech text-[10.5px] leading-relaxed text-cyan-200/70">
+            L&apos;installateur est compilé par <code className="text-cyan-100">packaging/windows/JarvisComplete.nsi</code>{" "}
+            : assistant MUI2, licence, choix des composants, protocole <code className="text-cyan-100">jarvis://</code>,
+            démarrage automatique et entrée dans « Applications installées ». Au premier lancement,{" "}
+            <code className="text-cyan-100">Start-Jarvis.ps1</code> initialise PostgreSQL dans{" "}
+            <code className="text-cyan-100">%LOCALAPPDATA%\JarvisCompleteData</code>, applique le schéma, démarre le
+            moteur sur <code className="text-cyan-100">127.0.0.1:3210</code>, l&apos;agent vocal Python puis ouvre la
+            fenêtre native — l&apos;assistant d&apos;abord, le studio ensuite.
+          </p>
+          <pre className="mt-3 overflow-x-auto border border-cyan-500/20 bg-[#020a16] p-3 font-tech text-[10.5px] leading-relaxed text-cyan-200/85">
+{`# Reconstruction des artefacts depuis les sources
+./scripts/build-complete-installer.sh`}
+          </pre>
+        </div>
+
+        {/* ── Versions légères ──────────────────────────────────── */}
+        {light.length > 0 && (
+          <div className="mt-4 border border-cyan-500/20 bg-[#04101f]/70 p-4">
+            <h2 className="flex items-center gap-2 font-orbitron text-[10px] uppercase tracking-[0.2em] text-cyan-300/85">
+              <AppWindow size={14} /> Versions légères — agent PC seul
+            </h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {light.map(item => (
+                <a
+                  key={item.label}
+                  href={download(item.m.file)}
+                  className="inline-flex items-center gap-2 border border-cyan-500/30 px-3 py-2 font-tech text-[10px] tracking-[0.1em] text-cyan-300/85 transition-colors hover:border-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-100"
+                >
+                  <Download size={11} /> {item.label}
+                  <span className="text-cyan-500/55">· {formatSize(item.m.size)} · {item.hint}</span>
+                </a>
+              ))}
+            </div>
+            <p className="mt-3 font-tech text-[10px] leading-relaxed text-cyan-500/60">
+              Sans l&apos;interface web : utile pour équiper un second PC qui pilote seulement souris, clavier et
+              diction.
+            </p>
+          </div>
+        )}
+
+        {/* ── Notices ────────────────────────────────────────────── */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[
+            { m: notice, label: "LISEZ-MOI-WINDOWS-11.txt" },
+            { m: licence, label: "LICENCE.txt" },
+            { m: envExample, label: ".env.example" },
+            { m: agent, label: "jarvis-agent.py" },
+          ].map(item => (
+            <a
+              key={item.label}
+              href={item.m.available ? download(item.m.file) : undefined}
+              aria-disabled={!item.m.available}
+              className={`inline-flex items-center gap-1.5 border px-3 py-1.5 font-tech text-[10px] tracking-[0.1em] transition-colors ${
+                item.m.available
+                  ? "border-cyan-500/30 text-cyan-300/85 hover:border-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-100"
+                  : "cursor-not-allowed border-cyan-500/15 text-cyan-500/40"
+              }`}
+            >
+              <FileText size={11} /> {item.label}
+            </a>
+          ))}
+        </div>
+
         <div className="mt-6 grid gap-4 md:grid-cols-[1.35fr_0.65fr]">
           <div className="hud-frame border border-cyan-500/20 bg-[#04101f]/75 p-5">
             <h2 className="flex items-center gap-2 font-orbitron text-xs uppercase tracking-[0.2em] text-cyan-200">
-              <TerminalSquare size={15} /> Contenu embarqué
+              <TerminalSquare size={15} /> Après l&apos;installation
             </h2>
-            <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-              {INCLUDED.map((item) => (
+            <ul className="mt-4 grid gap-2">
+              {[
+                "« Démarrer JARVIS » dans le menu Démarrer (ou le raccourci bureau)",
+                "La fenêtre s'ouvre sur l'assistant : dites « Jarvis » ou tapez votre demande",
+                "« Studio 3D » dans la barre supérieure pour l'éditeur de mondes",
+                "« Dev » pour MCP, skills, agents IA et montage vidéo",
+                "« Ouvrir les clés API » pour renseigner votre LLM préféré",
+              ].map(item => (
                 <li key={item} className="flex items-start gap-2 font-tech text-[11px] leading-relaxed text-cyan-100/75">
-                  <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-emerald-400" /> {item}
+                  <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-cyan-400" /> {item}
                 </li>
               ))}
             </ul>

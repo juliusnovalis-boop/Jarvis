@@ -1,10 +1,13 @@
 import type { NextConfig } from "next";
 
+// Chaîne d'installateur Windows (scripts/build-complete-installer.sh) :
+//   NEXT_OUTPUT=standalone npx next build   →   .next-standalone/standalone
+// La prévisualisation garde la sortie classique dans .next, puisque
+// `next start` refuse explicitement la sortie standalone.
+const standalone = process.env.NEXT_OUTPUT === "standalone";
+
 const nextConfig: NextConfig = {
-  // Produit .next/standalone : serveur Node autonome, nécessaire au paquet
-  // Windows complet (Jarvis-Complete-Portable.zip / Setup.exe) — aucun npm
-  // install sur le PC utilisateur, le serveur part de server.js.
-  output: "standalone",
+  ...(standalone ? { output: "standalone" as const, distDir: ".next-standalone" } : {}),
   // Clients IMAP/SMTP : laissés hors bundle (API Node natives, gros paquets).
   serverExternalPackages: ["imapflow", "nodemailer"],
 };

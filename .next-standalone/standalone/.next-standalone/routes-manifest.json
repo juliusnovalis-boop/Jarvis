@@ -1,0 +1,219 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "onMatchHeaders": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/admin",
+      "regex": "^/admin(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin(?:/)?$"
+    },
+    {
+      "page": "/api/agents",
+      "regex": "^/api/agents(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/agents(?:/)?$"
+    },
+    {
+      "page": "/api/apis",
+      "regex": "^/api/apis(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/apis(?:/)?$"
+    },
+    {
+      "page": "/api/brain",
+      "regex": "^/api/brain(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/brain(?:/)?$"
+    },
+    {
+      "page": "/api/chat",
+      "regex": "^/api/chat(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/chat(?:/)?$"
+    },
+    {
+      "page": "/api/console",
+      "regex": "^/api/console(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/console(?:/)?$"
+    },
+    {
+      "page": "/api/devices",
+      "regex": "^/api/devices(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/devices(?:/)?$"
+    },
+    {
+      "page": "/api/download",
+      "regex": "^/api/download(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/download(?:/)?$"
+    },
+    {
+      "page": "/api/health",
+      "regex": "^/api/health(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/health(?:/)?$"
+    },
+    {
+      "page": "/api/history",
+      "regex": "^/api/history(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/history(?:/)?$"
+    },
+    {
+      "page": "/api/mail",
+      "regex": "^/api/mail(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mail(?:/)?$"
+    },
+    {
+      "page": "/api/mcp",
+      "regex": "^/api/mcp(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mcp(?:/)?$"
+    },
+    {
+      "page": "/api/node",
+      "regex": "^/api/node(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/node(?:/)?$"
+    },
+    {
+      "page": "/api/remote",
+      "regex": "^/api/remote(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/remote(?:/)?$"
+    },
+    {
+      "page": "/api/remote/status",
+      "regex": "^/api/remote/status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/remote/status(?:/)?$"
+    },
+    {
+      "page": "/api/search",
+      "regex": "^/api/search(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/search(?:/)?$"
+    },
+    {
+      "page": "/api/skills",
+      "regex": "^/api/skills(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/skills(?:/)?$"
+    },
+    {
+      "page": "/api/state",
+      "regex": "^/api/state(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/state(?:/)?$"
+    },
+    {
+      "page": "/api/studio/project",
+      "regex": "^/api/studio/project(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/studio/project(?:/)?$"
+    },
+    {
+      "page": "/api/vision",
+      "regex": "^/api/vision(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/vision(?:/)?$"
+    },
+    {
+      "page": "/assistant",
+      "regex": "^/assistant(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/assistant(?:/)?$"
+    },
+    {
+      "page": "/code",
+      "regex": "^/code(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/code(?:/)?$"
+    },
+    {
+      "page": "/icon.svg",
+      "regex": "^/icon\\.svg(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon\\.svg(?:/)?$"
+    },
+    {
+      "page": "/install",
+      "regex": "^/install(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/install(?:/)?$"
+    },
+    {
+      "page": "/mobile",
+      "regex": "^/mobile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/mobile(?:/)?$"
+    },
+    {
+      "page": "/studio",
+      "regex": "^/studio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/studio(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

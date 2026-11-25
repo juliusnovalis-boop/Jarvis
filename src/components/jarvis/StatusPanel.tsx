@@ -55,12 +55,18 @@ export function StatusPanel({
   bootTime,
   messageCount,
 }: StatusPanelProps) {
-  const [now, setNow] = useState(new Date());
+  // L'horloge est initialisée à null : `new Date()` pendant le rendu produirait
+  // une heure serveur côté SSR et une heure client côté navigateur, ce qui casse
+  // l'hydratation (React #418). On affiche un emplacement stable puis on démarre
+  // la pendule au montage.
+  const [now, setNow] = useState<Date | null>(null);
   const bars = useBars();
   const uptime = useUptime(bootTime);
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
+    const tick = () => setNow(new Date());
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -100,11 +106,15 @@ export function StatusPanel({
         <div className="mt-2.5 flex items-baseline gap-2">
           <Clock size={13} className="translate-y-px text-cyan-300/70" />
           <span className="font-tech text-2xl tabular-nums text-cyan-100 jarvis-glow">
-            {now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            {now
+              ? now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+              : "--:--:--"}
           </span>
         </div>
         <p className="mt-0.5 font-tech text-[11px] capitalize tracking-wider text-cyan-400/70">
-          {now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+          {now
+            ? now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })
+            : "\u00a0"}
         </p>
         <p className="mt-1.5 font-tech text-[10px] tracking-[0.2em] text-cyan-500/55">SESSION {uptime}</p>
       </div>

@@ -36,7 +36,9 @@ function OpenJarvisWindow {
     $env:JARVIS_URL = $Url
     Start-Process -FilePath $Electron -ArgumentList "`"$DesktopApp`"" -WorkingDirectory $DesktopApp
   } else {
-    throw "Le shell bureau Jarvis.exe est absent ou endommage. Reinstallez Jarvis Complete."
+    # Pas de shell Electron embarque : on ouvre l'interface dans le navigateur.
+    Log "Fenetre bureau absente : ouverture de l'interface dans le navigateur."
+    Start-Process $Url
   }
 }
 
@@ -94,13 +96,10 @@ try {
   $SchemaMarker = Join-Path $DataRoot "schema-v1.installed"
   if (-not (Test-Path $SchemaMarker)) {
     Log "Creation de la base app_db et de ses tables..."
-    $env:PGPASSWORD = ""
-    & (Join-Path $PgBin "createdb.exe") -h 127.0.0.1 -p $PgPort -U postgres app_db 2>$null
-    & (Join-Path $PgBin "psql.exe") `
-      -h 127.0.0.1 -p $PgPort -U postgres -d app_db `
-      -v ON_ERROR_STOP=1 `
-      -f (Join-Path $Root "schema.sql") `
-      > (Join-Path $Logs "schema.log") 2>&1
+    # Les binaires embarques ne fournissent ni psql ni createdb :
+    # on cree la base et on applique schema.sql via Node + pg.
+    $env:DATABASE_URL = "postgresql://postgres@127.0.0.1:$PgPort/app_db"
+    & $Node (Join-Path $App "setup-db.js") > (Join-Path $Logs "schema.log") 2>&1
     if ($LASTEXITCODE -ne 0) { throw "Creation des tables echouee. Voir logs\schema.log" }
     Set-Content -Path $SchemaMarker -Value (Get-Date -Format o) -Encoding ASCII
     Log "Base de donnees prete."

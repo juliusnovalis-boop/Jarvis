@@ -101,3 +101,48 @@ Jarvis-Complete-Portable.zip 382 558 785 o
 ```
 
 Ces valeurs sont affichées en clair sur `/install`.
+
+---
+
+## Artefacts servis par l'interface (`/install`)
+
+La page `/install` et la route `/api/download` ne référençaient que des binaires
+absents du dépôt (ignorés par git), d'où l'erreur `Fichier absent du serveur.`
+lors du clic sur le .exe.
+
+### Artefacts réellement produits
+
+| Fichier | Origine | État |
+|---|---|---|
+| `public/jarvis-node/Jarvis-Agent-Setup.exe` | `packaging/windows/JarvisAgent.nsi` (NSIS) | construit |
+| `public/jarvis-node/Jarvis-Agent-Portable.zip` | même contenu, archive ZIP | construit |
+| `.env`, `.env.example`, notices, `jarvis-agent.py` | fichiers du dépôt | présents |
+| `Jarvis.apk` | `android/build-apk.sh` (SDK Android requis) | à construire |
+| `Jarvis-Complete-Setup.exe` / `-Portable.zip` | `Construire-Jarvis-Complet.ps1` sous Windows | à construire |
+
+Reproduire les deux premiers :
+
+```bash
+sudo apt-get install -y nsis zip
+./scripts/build-agent-artifacts.sh
+```
+
+L'installateur NSIS installe l'agent Python, les lanceurs PowerShell/Batch/VBS,
+le coquillage Electron, les notices et le modèle `.env` dans
+`C:\Program Files\JARVIS\Agent`, crée les raccourcis du menu Démarrer et
+l'entrée de désinstallation.
+
+### Comportement de `/install`
+
+La page est un composant serveur : elle calcule la **taille réelle** et le
+**SHA-256** de chaque fichier sur disque et n'affiche un lien que si le fichier
+existe. Un artefact absent affiche la commande de construction à sa place —
+plus jamais de lien mort ni de hash fabriqué.
+
+### Sécurité de `/api/download`
+
+Le nom de fichier est validé (120 caractères max, ni `/`, ni `\`, ni `..`, ni
+caractères hors `[\w.\- ()]`) puis re-filtré : le chemin résolu doit rester dans
+`public/jarvis-node`. Les seuls fichiers hors de ce dossier (`.env`,
+`.env.example`) sont déclarés en dur. Réponses : `200`/`206` (reprise `Range`),
+`404` JSON explicite avec indice de reconstruction.

@@ -10,8 +10,12 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
     "@types/jsdom": "^30.0.0",
     "@types/nodemailer": "^8.0.2",
+    "@types/three": "^0.187.0",
     "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
     "framer-motion": "^14.14.0",
@@ -21,8 +25,10 @@
     "next": "16.4.2",
     "nodemailer": "^10.6.1",
     "pg": "8.20.0",
+    "postprocessing": "^6.39.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "three": "^0.187.0",
     "tsx": "^4.23.15"
   },
   "devDependencies": {
